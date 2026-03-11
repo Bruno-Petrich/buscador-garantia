@@ -17,6 +17,44 @@
     --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+[data-theme="light"] {
+    --bg-color: #f6f8fa;
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-primary: #1f2328;
+    --text-secondary: #656d76;
+    --accent-color: #0969da;
+    --accent-glow: rgba(9, 105, 218, 0.15);
+}
+
+[data-theme="light"] body::before {
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+}
+
+[data-theme="light"] .search-header {
+    background: rgba(246, 248, 250, 0.85);
+}
+
+[data-theme="light"] .input-wrapper {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .input-wrapper:focus-within {
+    background: #fff;
+}
+
+[data-theme="light"] .card-header .model-badge {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .empty-state .icon-wrapper {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .clear-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -70,14 +108,53 @@ body::before {
     -webkit-backdrop-filter: var(--glass-blur);
 }
 
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
 .header-content h1 {
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: -0.02em;
     background: linear-gradient(90deg, #fff, var(--text-secondary));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0;
+}
+
+[data-theme="light"] .header-content h1 {
+    background: linear-gradient(90deg, #1f2328, var(--text-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.theme-toggle {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.theme-toggle:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent-color);
+}
+
+[data-theme="light"] .theme-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .subtitle {

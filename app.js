@@ -354,8 +354,47 @@ clearBtn.addEventListener('click', () => {
     searchInput.focus();
 });
 
+// Tema Escuro/Claro
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const sunIcon = document.querySelector('.sun-icon');
+const moonIcon = document.querySelector('.moon-icon');
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    
+    // Original system was dark. So we only set to light if explicitly requested.
+    const isLight = savedTheme === 'light';
+    
+    if (isLight) {
+        document.documentElement.setAttribute('data-theme', 'light');
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+    }
+}
+
+themeToggleBtn.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    
+    if (currentTheme === 'light') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'dark');
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+    }
+});
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     // Desabilitar input até carregar os dados
     searchInput.disabled = true;
     loadExcelData();
