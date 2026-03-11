@@ -1,5 +1,14 @@
 // Dados do arquivo Excel
 let globalData = [];
+
+// ==========================================
+// CONFIGURAÇÃO DA PLANILHA DO GOOGLE SHEETS
+// ==========================================
+// 1. No Google Sheets, vá em: Arquivo > Compartilhar > Publicar na Web
+// 2. Em "Vincular", mude de "Página da Web" para "Microsoft Excel (.xlsx)"
+// 3. Clique em Publicar, copie o link e cole-o entre as aspas abaixo:
+const GOOGLE_SHEET_URL = "COLE_AQUI_O_LINK_GERADO_PELO_GOOGLE_SHEETS";
+
 // Colunas exigidas pelo usuário
 const REQUIRED_COLUMNS = [
     "Local de Inst.", "Modelo", "N° Série", "Cidade", 
@@ -152,16 +161,21 @@ function processWorkbook(workbook) {
     });
 }
 
-// Processar Arquivo Excel Localmente
+// Processar Arquivo Excel
 async function loadExcelData() {
     try {
         loader.classList.remove('hidden');
         statusText.textContent = "Carregando base de dados...";
         fallbackContainer.classList.add('hidden');
 
-        // Usando fetch para pegar o arquivo local do mesmo diretório
-        const response = await fetch('./CONTRATOS 2025 - REV03 - Online.xlsx');
-        if (!response.ok) throw new Error('Falha ao carregar arquivo excel');
+        // Determina a URL: usa a do Google Sheets se configurada, senão tenta o arquivo local
+        const urlToFetch = GOOGLE_SHEET_URL.includes("COLE_AQUI_O_LINK_GERADO_PELO_GOOGLE_SHEETS") 
+            ? './CONTRATOS 2025 - REV03 - Online.xlsx' 
+            : GOOGLE_SHEET_URL;
+
+        // Faz o download do arquivo
+        const response = await fetch(urlToFetch);
+        if (!response.ok) throw new Error('Falha ao carregar a planilha');
         
         const arrayBuffer = await response.arrayBuffer();
         
