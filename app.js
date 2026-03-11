@@ -7,11 +7,11 @@ let globalData = [];
 // 1. No Google Sheets, vá em: Arquivo > Compartilhar > Publicar na Web
 // 2. Em "Vincular", mude de "Página da Web" para "Microsoft Excel (.xlsx)"
 // 3. Clique em Publicar, copie o link e cole-o entre as aspas abaixo:
-const GOOGLE_SHEET_URL = "COLE_AQUI_O_LINK_GERADO_PELO_GOOGLE_SHEETS";
+const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREGjR1TvT1rbeUemE9SkWWkGvMgrZ5oMbEAnGiAdfmE6oawKLd43MRdOtx2_gbdhjvz3fUHJrgUec7/pub?output=xlsx";
 
 // Colunas exigidas pelo usuário
 const REQUIRED_COLUMNS = [
-    "Local de Inst.", "Modelo", "N° Série", "Cidade", 
+    "Local de Inst.", "Modelo", "N° Série", "Cidade",
     "UF", "Endereço de Inst.", "N° Contrato", "Término da Garantia"
 ];
 
@@ -28,7 +28,7 @@ const fileUpload = document.getElementById('fileUpload');
 // Utilitário de Debounce para busca
 function debounce(func, wait) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
@@ -37,7 +37,7 @@ function debounce(func, wait) {
 // Formatação de data do Excel para JS (se for número serial do Excel ou Date Object)
 function formatExcelDate(dateVal) {
     if (!dateVal) return '-';
-    
+
     // Se for um objeto Date nativo (SheetJS com cellDates: true)
     if (dateVal instanceof Date) {
         const day = String(dateVal.getUTCDate()).padStart(2, '0');
@@ -45,7 +45,7 @@ function formatExcelDate(dateVal) {
         const year = dateVal.getUTCFullYear();
         return `${day}/${month}/${year}`;
     }
-    
+
     // Se já for string (ex: '15/05/2025'), retorna ela mesma
     if (typeof dateVal === 'string') {
         // Tenta garantir formato DD/MM/AAAA se a string vier com traços (ex: 2024-01-24)
@@ -65,10 +65,10 @@ function formatExcelDate(dateVal) {
         const excelEpochOffset = 25569;
         const msPerDay = 86400 * 1000;
         const date = new Date((dateVal - excelEpochOffset) * msPerDay);
-        
+
         // Ajuste de fuso horário pra evitar que caia um dia antes (ex: 23:00)
         date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
-        
+
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
@@ -82,7 +82,7 @@ function formatExcelDate(dateVal) {
 function getWarrantyStatus(dateStr) {
     try {
         if (!dateStr || dateStr === '-') return { class: '', text: 'Sem Data' };
-        
+
         // Assume formato DD/MM/YYYY ou similar
         const parts = dateStr.includes('/') ? dateStr.split('/') : null;
         if (!parts || parts.length !== 3) return { class: 'status-active', text: 'Ativa' }; // Fallback
@@ -90,10 +90,10 @@ function getWarrantyStatus(dateStr) {
         const day = parseInt(parts[0], 10);
         const month = parseInt(parts[1], 10) - 1;
         const year = parseInt(parts[2], 10);
-        
+
         const warrantyDate = new Date(year, month, day);
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
 
         const diffTime = warrantyDate - today;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -118,11 +118,11 @@ function highlightText(text, query) {
 function processWorkbook(workbook) {
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
-    
+
     // A planilha oficial começa o cabeçalho na linha 3 ou possui colunas em branco.
     // Tentaremos achar a linha de cabeçalho correta buscando palavras chave.
     const rawDataFromSheet = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
-    
+
     // Encontra The header row index
     let headerRowIndex = 0;
     for (let i = 0; i < Math.min(10, rawDataFromSheet.length); i++) {
@@ -132,17 +132,17 @@ function processWorkbook(workbook) {
             break;
         }
     }
-    
+
     // Converte com o header offset correto:
     const rawData = XLSX.utils.sheet_to_json(worksheet, { range: headerRowIndex, defval: "" });
-    
+
     // Normalizar chaves para facilitar busca (ignorar acentos nos nomes das colunas)
     globalData = rawData.map(row => {
         // Mapeia colunas encontradas para o que vamos usar, sendo flexivel com nomes exatos
         const getVal = (possibleKeys) => {
-            for(let key of possibleKeys) {
+            for (let key of possibleKeys) {
                 // Procura match parcial de key se existir
-                const foundKey = Object.keys(row).find(k => k.toLowerCase().trim() === key.toLowerCase().trim() || k.replace(/[^a-zA-Z0-9]/g,'') === key.replace(/[^a-zA-Z0-9]/g,''));
+                const foundKey = Object.keys(row).find(k => k.toLowerCase().trim() === key.toLowerCase().trim() || k.replace(/[^a-zA-Z0-9]/g, '') === key.replace(/[^a-zA-Z0-9]/g, ''));
                 if (foundKey) return row[foundKey];
             }
             return '-';
@@ -169,24 +169,24 @@ async function loadExcelData() {
         fallbackContainer.classList.add('hidden');
 
         // Determina a URL: usa a do Google Sheets se configurada, senão tenta o arquivo local
-        const urlToFetch = GOOGLE_SHEET_URL.includes("COLE_AQUI_O_LINK_GERADO_PELO_GOOGLE_SHEETS") 
-            ? './CONTRATOS 2025 - REV03 - Online.xlsx' 
+        const urlToFetch = GOOGLE_SHEET_URL.includes("COLE_AQUI_O_LINK_GERADO_PELO_GOOGLE_SHEETS")
+            ? './CONTRATOS 2025 - REV03 - Online.xlsx'
             : GOOGLE_SHEET_URL;
 
         // Faz o download do arquivo
         const response = await fetch(urlToFetch);
         if (!response.ok) throw new Error('Falha ao carregar a planilha');
-        
+
         const arrayBuffer = await response.arrayBuffer();
-        
+
         // Leitura usando SheetJS
         const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
-        
+
         processWorkbook(workbook);
 
         loader.classList.add('hidden');
         statusText.textContent = `${globalData.length} registros carregados.`;
-        
+
         // Remove text after 3 seconds
         setTimeout(() => {
             statusText.textContent = "";
@@ -216,17 +216,17 @@ fileUpload.addEventListener('change', (e) => {
     fallbackContainer.classList.add('hidden');
 
     const reader = new FileReader();
-    reader.onload = function(evt) {
+    reader.onload = function (evt) {
         try {
             const data = evt.target.result;
             const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-            
+
             processWorkbook(workbook);
-            
+
             loader.classList.add('hidden');
             statusText.textContent = `${globalData.length} registros carregados com sucesso!`;
             statusText.style.color = "var(--success-color)";
-            
+
             setTimeout(() => {
                 statusText.textContent = "";
             }, 3500);
@@ -258,13 +258,13 @@ function renderResults(results, query) {
     }
 
     emptyState.classList.add('hidden');
-    
+
     // Limitando a 50 resultados para performance do DOM
     const dataToRender = results.slice(0, 50);
-    
+
     const htmlCards = dataToRender.map(item => {
         const warrantyStatus = getWarrantyStatus(item.garantia);
-        
+
         return `
         <div class="result-card">
             <div class="card-header">
@@ -309,10 +309,10 @@ function renderResults(results, query) {
     }).join('');
 
     resultsList.innerHTML = htmlCards;
-    
+
     // Indicador caso haja mais resultados não exibidos
     if (results.length > 50) {
-         resultsList.innerHTML += `
+        resultsList.innerHTML += `
             <div style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 1rem;">
                 Exibindo 50 de ${results.length} resultados. Refine sua busca.
             </div>
@@ -323,7 +323,7 @@ function renderResults(results, query) {
 // Executar Busca
 function handleSearch() {
     const query = searchInput.value.trim().toLowerCase();
-    
+
     if (query.length > 0) {
         clearBtn.classList.remove('hidden');
     } else {
