@@ -7,7 +7,7 @@ let globalData = [];
 // 1. No Google Sheets, vá em: Arquivo > Compartilhar > Publicar na Web
 // 2. Em "Vincular", mude de "Página da Web" para "Microsoft Excel (.xlsx)"
 // 3. Clique em Publicar, copie o link e cole-o entre as aspas abaixo:
-const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREGjR1TvT1rbeUemE9SkWWkGvMgrZ5oMbEAnGiAdfmE6oawKLd43MRdOtx2_gbdhjvz3fUHJrgUec7/pub?output=xlsx";
+const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1g-eShoOU4zCh7IzN3eDr7hQjKBkBvawakXqh4UCHhBk/gviz/tq?tqx=out:csv&gid=1405378764";
 
 // Colunas exigidas pelo usuário
 const REQUIRED_COLUMNS = [
