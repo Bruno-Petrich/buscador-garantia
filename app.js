@@ -221,14 +221,9 @@ async function loadExcelData() {
         fallbackContainer.classList.add('hidden');
 
         // Determina a URL: usa a do Google Sheets se configurada, senão tenta o arquivo local
-        let urlToFetch = GOOGLE_SHEET_URL.includes("COLE_AQUI_O_LINK_GERADO_PELO_GOOGLE_SHEETS")
+        const urlToFetch = GOOGLE_SHEET_URL.includes("COLE_AQUI_O_LINK_GERADO_PELO_GOOGLE_SHEETS")
             ? './CONTRATOS 2025 - REV03 - Online.xlsx'
             : GOOGLE_SHEET_URL;
-
-        // Adiciona proxy de CORS para contornar bloqueio de navegação local
-        if (urlToFetch.startsWith('http')) {
-            urlToFetch = 'https://corsproxy.io/?' + encodeURIComponent(urlToFetch);
-        }
 
         // Faz o download do arquivo
         const response = await fetch(urlToFetch);
