@@ -82,6 +82,7 @@ function formatExcelDate(dateVal) {
 function getWarrantyStatus(dateStr) {
     try {
         if (!dateStr || dateStr === '-') return { class: '', text: 'Sem Data' };
+        if (dateStr === 'Sem contrato') return { class: 'status-expired', text: 'Sem Contrato' };
 
         // Assume formato DD/MM/YYYY ou similar
         const parts = dateStr.includes('/') ? dateStr.split('/') : null;
@@ -148,17 +149,68 @@ function processWorkbook(workbook) {
             return '-';
         };
 
-        return {
-            local: getVal(['Local de Inst.', 'Local de Instalacao', 'Local Inst', 'Local']),
-            modelo: getVal(['Modelo', 'Equipamento']),
-            serie: getVal(['N° Série', 'N Série', 'Numero Serie', 'Num Serie', 'Série', 'Serie']),
-            cidade: getVal(['Cidade']),
-            uf: getVal(['UF', 'Estado']),
-            endereco: getVal(['Endereço de Inst.', 'Endereço', 'Endereco de Inst', 'Endereco']),
-            contrato: getVal(['N° Contrato', 'N Contrato', 'Contrato']),
-            garantia: formatExcelDate(getVal(['Término da Garantia', 'Termino Garantia', 'Garantia', 'Fim Garantia']))
-        };
-    });
+            let valGaran = getVal(['Término da Garantia', 'Termino Garantia', 'Garantia', 'Fim Garantia']);
+            let valManu = getVal(['Término da Manutenção', 'Termino da Manutencao', 'Termino Manutencao', 'Manutenção', 'Manutencao']);
+            let valLoca = getVal(['Término da Locação', 'Término de Locação', 'Termino da Locacao', 'Termino de Locacao', 'Termino Locacao', 'Fim Locacao']);
+            
+            let dtVal = valGaran;
+            let dtLabel = 'Término Garantia';
+            
+            if (dtVal === '-' || !dtVal) {
+                dtVal = valManu;
+                dtLabel = 'Término Manutenção';
+            }
+            if (dtVal === '-' || !dtVal) {
+                dtVal = valLoca;
+                dtLabel = 'Término Locação';
+            }
+            
+            let finalDateStr = '';
+            if (dtVal === '-' || !dtVal) {
+                finalDateStr = 'Sem contrato';
+                dtLabel = 'Status Contrato';
+            } else {
+                finalDateStr = formatExcelDate(dtVal);
+            }
+
+            // Verifica os status
+            const isAtivo = (val) => {
+                if (val === '-' || !val) return false;
+                const status = getWarrantyStatus(formatExcelDate(val));
+                return status.class === 'status-active' || status.class === 'status-warning';
+            };
+            
+            let isGarantiaActive = isAtivo(valGaran);
+            let isLocacaoActive = isAtivo(valLoca);
+            let isManutencaoActive = isAtivo(valManu);
+            
+            let originalTroca = String(getVal(['Contempla troca de peças', 'Contempla Troca de Peças', 'Troca de peças', 'Troca de pecas', 'Peças', 'Pecas', 'Troca Peças'])).trim().toLowerCase();
+            let trocaPecasValor;
+            
+            if (originalTroca === 'sim' || originalTroca === 'não' || originalTroca === 'nao') {
+                trocaPecasValor = originalTroca.charAt(0).toUpperCase() + originalTroca.slice(1);
+                if (trocaPecasValor === 'Nao') trocaPecasValor = 'Não';
+            } else {
+                if (isGarantiaActive || isLocacaoActive || isManutencaoActive) {
+                    trocaPecasValor = 'Sim';
+                } else {
+                    trocaPecasValor = 'Não';
+                }
+            }
+
+            return {
+                local: getVal(['Local de Inst.', 'Local de Instalacao', 'Local Inst', 'Local']),
+                modelo: getVal(['Modelo', 'Equipamento']),
+                serie: getVal(['N° Série', 'N Série', 'Numero Serie', 'Num Serie', 'Série', 'Serie']),
+                cidade: getVal(['Cidade']),
+                uf: getVal(['UF', 'Estado']),
+                endereco: getVal(['Endereço de Inst.', 'Endereço', 'Endereco de Inst', 'Endereco']),
+                contrato: getVal(['N° Contrato', 'N Contrato', 'Contrato']),
+                garantiaLabel: dtLabel,
+                garantia: finalDateStr,
+                trocaPecas: trocaPecasValor
+            };
+        });
 }
 
 // Processar Arquivo Excel
@@ -169,9 +221,14 @@ async function loadExcelData() {
         fallbackContainer.classList.add('hidden');
 
         // Determina a URL: usa a do Google Sheets se configurada, senão tenta o arquivo local
-        const urlToFetch = GOOGLE_SHEET_URL.includes("COLE_AQUI_O_LINK_GERADO_PELO_GOOGLE_SHEETS")
+        let urlToFetch = GOOGLE_SHEET_URL.includes("COLE_AQUI_O_LINK_GERADO_PELO_GOOGLE_SHEETS")
             ? './CONTRATOS 2025 - REV03 - Online.xlsx'
             : GOOGLE_SHEET_URL;
+
+        // Adiciona proxy de CORS para contornar bloqueio de navegação local
+        if (urlToFetch.startsWith('http')) {
+            urlToFetch = 'https://corsproxy.io/?' + encodeURIComponent(urlToFetch);
+        }
 
         // Faz o download do arquivo
         const response = await fetch(urlToFetch);
@@ -297,11 +354,17 @@ function renderResults(results, query) {
                 </div>
                 
                 <div class="data-group">
-                    <span class="data-label">Término Garantia</span>
-                    <span class="data-value warranty-status ${warrantyStatus.class}">
-                        <span class="status-dot" title="${warrantyStatus.text}"></span>
+                    <span class="data-label">${item.garantiaLabel || 'Status de Contrato'}</span>
+                    <span class="data-value warranty-status ${item.garantia === 'Sem contrato' ? '' : warrantyStatus.class}">
+                        ${item.garantia !== 'Sem contrato' ? `<span class="status-dot"></span>` : ''}
+                        ${item.garantia !== 'Sem contrato' ? `<span style="opacity: 0.8; font-size: 0.8em; margin-right: 4px;">(${warrantyStatus.text})</span>` : ''}
                         ${item.garantia}
                     </span>
+                </div>
+                
+                <div class="data-group">
+                    <span class="data-label">Contempla Peças</span>
+                    <span class="data-value" style="font-weight: 600;">${item.trocaPecas !== '-' ? item.trocaPecas : 'N/A'}</span>
                 </div>
             </div>
         </div>
@@ -362,17 +425,17 @@ const moonIcon = document.querySelector('.moon-icon');
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     
-    // Original system was dark. So we only set to light if explicitly requested.
-    const isLight = savedTheme === 'light';
+    // Default system is light now. Set to dark only if explicitly requested.
+    const isDark = savedTheme === 'dark';
     
-    if (isLight) {
-        document.documentElement.setAttribute('data-theme', 'light');
-        sunIcon.style.display = 'none';
-        moonIcon.style.display = 'block';
-    } else {
+    if (isDark) {
         document.documentElement.removeAttribute('data-theme');
         sunIcon.style.display = 'block';
         moonIcon.style.display = 'none';
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
     }
 }
 
