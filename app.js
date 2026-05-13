@@ -148,20 +148,46 @@ function processWorkbook(workbook) {
             let valManu = getVal(['Término da Manutenção', 'Termino da Manutencao', 'Termino Manutencao', 'Manutenção', 'Manutencao']);
             let valLoca = getVal(['Término da Locação', 'Término de Locação', 'Termino da Locacao', 'Termino de Locacao', 'Termino Locacao', 'Fim Locacao']);
             
-            let dtVal = valGaran;
-            let dtLabel = 'Término Garantia';
-            
-            if (dtVal === '-' || !dtVal) {
-                dtVal = valManu;
-                dtLabel = 'Término Manutenção';
+            // Monta lista de contratos por prioridade: Garantia → Manutenção → Locação
+            const contratos = [
+                { val: valGaran, label: 'Término Garantia' },
+                { val: valManu, label: 'Término Manutenção' },
+                { val: valLoca, label: 'Término Locação' }
+            ];
+
+            // Verifica se um valor de data representa um contrato ativo (não expirado)
+            const isContratoAtivo = (val) => {
+                if (!val || val === '-') return false;
+                const formatted = formatExcelDate(val);
+                const status = getWarrantyStatus(formatted);
+                return status.class === 'status-active' || status.class === 'status-warning';
+            };
+
+            let dtVal = null;
+            let dtLabel = '';
+
+            // 1º: Procura o primeiro contrato ATIVO na ordem de prioridade
+            for (const c of contratos) {
+                if (c.val && c.val !== '-' && isContratoAtivo(c.val)) {
+                    dtVal = c.val;
+                    dtLabel = c.label;
+                    break;
+                }
             }
-            if (dtVal === '-' || !dtVal) {
-                dtVal = valLoca;
-                dtLabel = 'Término Locação';
+
+            // 2º: Se nenhum ativo, usa o primeiro contrato que tenha data (mesmo expirado)
+            if (!dtVal) {
+                for (const c of contratos) {
+                    if (c.val && c.val !== '-') {
+                        dtVal = c.val;
+                        dtLabel = c.label;
+                        break;
+                    }
+                }
             }
             
             let finalDateStr = '';
-            if (dtVal === '-' || !dtVal) {
+            if (!dtVal) {
                 finalDateStr = 'Sem contrato';
                 dtLabel = 'Status Contrato';
             } else {
