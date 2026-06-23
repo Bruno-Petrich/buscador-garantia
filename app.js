@@ -242,8 +242,8 @@ async function loadExcelData() {
         fallbackContainer.classList.add('hidden');
 
         // URL direta do Google Sheets (Retorna CSV)
-        // Isso funcionará sem problemas de CORS quando o site estiver hospedado (ex: GitHub Pages)
-        const urlToFetch = 'https://docs.google.com/spreadsheets/d/1g-eShoOU4zCh7IzN3eDr7hQjKBkBvawakXqh4UCHhBk/gviz/tq?tqx=out:csv';
+        // O cachebuster (?_= timestamp) evita que o navegador exiba uma versão desatualizada
+        const urlToFetch = 'https://docs.google.com/spreadsheets/d/1g-eShoOU4zCh7IzN3eDr7hQjKBkBvawakXqh4UCHhBk/gviz/tq?tqx=out:csv&_=' + new Date().getTime();
 
         // Faz o download do arquivo
         const response = await fetch(urlToFetch);
