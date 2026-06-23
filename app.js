@@ -234,23 +234,24 @@ function processWorkbook(workbook) {
         });
 }
 
-// Processar Arquivo Excel
+// Processar Arquivo Excel via Google Sheets (GitHub Pages)
 async function loadExcelData() {
     try {
         loader.classList.remove('hidden');
         statusText.textContent = "Carregando base de dados...";
         fallbackContainer.classList.add('hidden');
 
-        // Determina a URL do arquivo local (deve estar na mesma pasta web)
-        const urlToFetch = './CONTRATOS 2025 - REV03 - Online.xlsx';
+        // URL direta do Google Sheets (Retorna CSV)
+        // Isso funcionará sem problemas de CORS quando o site estiver hospedado (ex: GitHub Pages)
+        const urlToFetch = 'https://docs.google.com/spreadsheets/d/1g-eShoOU4zCh7IzN3eDr7hQjKBkBvawakXqh4UCHhBk/gviz/tq?tqx=out:csv';
 
         // Faz o download do arquivo
         const response = await fetch(urlToFetch);
-        if (!response.ok) throw new Error('Falha ao carregar a planilha');
+        if (!response.ok) throw new Error('Falha ao carregar a planilha do Google Sheets');
 
         const arrayBuffer = await response.arrayBuffer();
 
-        // Leitura usando SheetJS
+        // Leitura usando SheetJS (Lê CSV nativamente)
         const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
 
         processWorkbook(workbook);
