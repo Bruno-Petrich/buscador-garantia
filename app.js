@@ -6,7 +6,7 @@ let globalData = [];
 // ==========================================
 // Colunas exigidas pelo usuário
 const REQUIRED_COLUMNS = [
-    "Local de Inst.", "Modelo", "N° Série", "Cidade",
+    "Cliente", "Local de Inst.", "Modelo", "N° Série", "Cidade",
     "UF", "Endereço de Inst.", "N° Contrato", "Término da Garantia"
 ];
 
@@ -220,6 +220,7 @@ function processWorkbook(workbook) {
             }
 
             return {
+                cliente: getVal(['Cliente', 'Empresa', 'Nome do Cliente']),
                 local: getVal(['Local de Inst.', 'Local de Instalacao', 'Local Inst', 'Local']),
                 modelo: getVal(['Modelo', 'Equipamento']),
                 serie: getVal(['N° Série', 'N Série', 'Numero Serie', 'Num Serie', 'Série', 'Serie']),
@@ -353,6 +354,11 @@ function renderResults(results, query) {
             </div>
             
             <div class="card-body">
+                <div class="data-group">
+                    <span class="data-label">Cliente</span>
+                    <span class="data-value">${item.cliente !== '-' && item.cliente ? item.cliente : 'Não informado'}</span>
+                </div>
+                
                 <div class="data-group">
                     <span class="data-label">Local de Inst.</span>
                     <span class="data-value">${item.local}</span>
