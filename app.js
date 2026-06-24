@@ -249,10 +249,10 @@ async function loadExcelData() {
         const response = await fetch(urlToFetch);
         if (!response.ok) throw new Error('Falha ao carregar a planilha do Google Sheets');
 
-        const arrayBuffer = await response.arrayBuffer();
+        const csvText = await response.text();
 
         // Leitura usando SheetJS (Lê CSV nativamente)
-        const workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+        const workbook = XLSX.read(csvText, { type: 'string', cellDates: true });
 
         processWorkbook(workbook);
 
