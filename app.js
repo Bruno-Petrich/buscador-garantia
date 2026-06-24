@@ -348,7 +348,7 @@ function renderResults(results, query) {
                         <line x1="9" y1="13" x2="15" y2="13"></line>
                         <path d="M12 17h.01"></path>
                     </svg>
-                    ${highlightText(item.serie, query)}
+                    <span style="word-break: break-word;">${highlightText(item.serie, query)}</span>
                 </div>
                 <div class="model-badge">${item.modelo || 'N/A'}</div>
             </div>

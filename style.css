@@ -358,6 +358,7 @@ input[type="text"]::placeholder {
 
 .serial-icon {
     opacity: 0.8;
+    flex-shrink: 0;
 }
 
 .model-badge {
